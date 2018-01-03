@@ -59,5 +59,5 @@ I hope the names are speaking for themselves… (: But here are some details:
 ### Known bugs
 
 - Date selection with hildon.DateButton results segmentation fault when no date selected – i.e. the user taps outside the date selection dialog. This does not happen in the search window though… 
-- Sometimes warnings are raised – maybe in connection to rotation and matplotlib. E.g.: weakref.py:232 – assertion G_IS_OBJECT failed. 
-- hildon button relief setting (i.e.: hildon.Button().set_relief(gtk.RELIEF_NONE)) does not always work so it looks like a normal button.
+- Sometimes warnings are raised – maybe in connection to rotation and matplotlib. E.g.: ```weakref.py:232 – assertion G_IS_OBJECT failed```. 
+- hildon button relief setting (i.e.: ```hildon.Button().set_relief(gtk.RELIEF_NONE)```) does not always work so it looks like a normal button.
