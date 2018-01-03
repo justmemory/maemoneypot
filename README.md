@@ -54,7 +54,7 @@ There are menu buttons both in calendar view and main view:
 I hope the names are speaking for themselves… (: But here are some details:
 - Specific month can be selected between 2016 and 2045
 - In settings window you can set currency, default view and an expense which if you add to expenses then it will be automatically set as a saving as well (so you do not have to add that amount to savings). 
-- You can search for everything and anything in all three databases – no whole words required and capital letter doesn’t matter. Incomes and savings entries can be modified or deleted only this way (for now). Important! If you modify or delete a saving entry, the “connected” expense entry remains the same as before (no automatic modification or deletion done) so you have to manually modify that expense entry as well (and vice versa: if you modify an expense which is technically a saving entry, the saving entry remains…).
+- You can search for everything and anything in all three databases – no whole words required and capital letter doesn’t matter. Incomes and savings entries can be modified or deleted only this way (for now). **Important!** *If you modify or delete a saving entry, the “connected” expense entry remains the same as before (no automatic modification or deletion done) so you have to manually modify that expense entry as well (and vice versa: if you modify an expense which is technically a saving entry, the saving entry remains…).*
 
 ### Known bugs
 
