@@ -20,7 +20,7 @@ An expense, income and saving tracker for Nokia N900 with some extended function
 ### Description
 
 The application does not depend on matplotlib and numpy directly. If you do not have those installed you just simply cannot see the graphs. 
-**Important:** You must install sqlcipher from the attached tar.gz (extract archive then run dpkg -i sqlcipher_3.7.2-1maemo5+0m5_armel.deb as root)
+**Important: you must install sqlcipher from the attached tar.gz (extract archive then run dpkg -i sqlcipher_3.7.2-1maemo5+0m5_armel.deb as root)**
 There is no automatic rollover so if you have some money at the end of the month you have to enter that manually for next month's income (maybe I should add rollover function too).
 
 There are two views available: 
