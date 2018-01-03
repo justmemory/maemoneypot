@@ -4,6 +4,7 @@ An expense, income and saving tracker for Nokia N900 with some extended function
 ![alt text](https://talk.maemo.org/attachment.php?attachmentid=39008&stc=1&d=1485814446)
 ![alt text](https://talk.maemo.org/attachment.php?attachmentid=39009&stc=1&d=1485814481)
 ![alt text](https://talk.maemo.org/attachment.php?attachmentid=39010&stc=1&d=1485814525)
+![alt text](http://talk.maemo.org/attachment.php?attachmentid=39012&stc=1&d=1485815703)
 ### ToDo
 - Apply details view for incomes and savings
 - Connect savings and expense more
