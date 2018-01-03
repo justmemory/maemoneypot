@@ -4,13 +4,12 @@ from __future__ import with_statement
 import hildon
 import gtk
 import dbus
-import sqlite3 as sql
+from pysqlcipher import dbapi2 as sql
 import time
 import datetime
 import calendar
 import os
 import sys
-import hashlib
 from modules.db_query import DatabaseQueries
 from modules.matplotlib_query import MatplotlibQueries
 from modules.clickable_pixbuf import CellRendererClickablePixbuf
@@ -23,6 +22,34 @@ iface = dbus.Interface(bus.get_object('org.freedesktop.Notifications',
                                       '/org/freedesktop/Notifications'),
                        'org.freedesktop.Notifications')
 
+def pragmaKey():
+    def getKey(self):
+        global key
+        key = self.get_text()
+        cur.execute('PRAGMA key="'+key+'";')
+        window.destroy()
+        global matplotlibQuery
+        matplotlibQuery = MatplotlibQueries(currency, key)
+        if defaultView == 'Main':
+            MainWindow().mainView(time.strftime('%Y'),
+                                  time.strftime('%m'), None)
+        elif defaultView == 'Calendar':
+            MainWindow().calendarView(time.strftime('%Y'), time.strftime('%m'))
+        hildon.Program.get_instance()
+        gtk.main()
+
+    window = hildon.StackableWindow()
+    window.set_title('Authentication')
+    table = gtk.Table(1, 1, True)
+    entryKey = hildon.Entry(gtk.HILDON_SIZE_AUTO)
+    entryKey.set_input_mode(gtk.HILDON_GTK_INPUT_MODE_FULL)
+    entryKey.set_visibility(False)
+    entryKey.connect('activate', getKey)
+    table.attach(entryKey, 0, 1, 0, 1)
+    window.add(table)
+    window.connect('destroy', gtk.main_quit)
+    window.show_all()
+
 try:
     with open(database):
         db = sql.connect(database)
@@ -32,13 +59,15 @@ except:
     print '\033[91m'+'Database does not exist so we must create it'+'\033[0m'
     db = sql.connect(database)
     cur = db.cursor()
+    cur.execute('PRAGMA key="temporary_key";')
     cur.execute('CREATE TABLE Expenses(Id integer primary key, \
                 Date date, Expense int, Category varchar, Tag varchar);')
     cur.execute('CREATE TABLE Incomes(Id integer primary key, \
                 Date date, Income int, Category varchar);')
     cur.execute('CREATE TABLE Savings(Id integer primary key, \
                 Date date, Saving int, Category varchar);')
-    iface.SystemNoteInfoprint('Database created')
+    iface.SystemNoteInfoprint('Database created with a temporary encryption \
+            key which you should change!')
 
 MonthNameList = {'01': 'Jan',
                  '02': 'Feb',
@@ -65,9 +94,6 @@ with open('/home/user/.maemoneypot/settings.ini', 'r') as settingsfile:
     settings = settingsfile.readlines()
 currency = settings[0][0:len(settings[0])-1]
 defaultView = settings[1][0:len(settings[1])-1]
-pwdEnabled = settings[3][0:len(settings[3])-1]
-
-matplotlibQuery = MatplotlibQueries(currency)
 
 
 class MainWindow(hildon.StackableWindow):
@@ -241,7 +267,8 @@ class MainWindow(hildon.StackableWindow):
             vbox.pack_start(datelabel, True, True, 0)
             if expense[0] is not None:
                 expenselabel = gtk.Label()
-                expenselabel.set_text("<span size='11000'>"+str(expense[0])+"</span>")
+                expenselabel.set_text("<span \
+                        size='11000'>"+str(expense[0])+"</span>")
                 expenselabel.set_use_markup(True)
                 expenselabel.modify_fg(gtk.STATE_NORMAL,
                                        gtk.gdk.color_parse('#f40005'))
@@ -382,8 +409,8 @@ class MainWindow(hildon.StackableWindow):
         savingCategory = settings[2][0:len(settings[2])-1]
         global defaultViewNew
         defaultViewNew = defaultView
-        global pwdEnabledNew
-        pwdEnabledNew = pwdEnabled
+        # global pwdEnabledNew
+        # pwdEnabledNew = pwdEnabled
 
         def getCurrency(self):
             global currencyNew
@@ -414,33 +441,57 @@ class MainWindow(hildon.StackableWindow):
             dialog.run()
             dialog.destroy()
 
-        def setPwdEnabled(self):
-            def getPwdEnabled(selector, data=None):
-                global pwdEnabledNew
-                pwdEnabledNew = selector.get_current_text()
-                buttonPwdEnabled.set_value(pwdEnabledNew)
+        def changePragmaKey(self):
+            def getCurrentPragmaKey(self):
+                global currentKey
+                currentKey = self.get_text()
+                self.set_text('')
 
-            liststore = gtk.ListStore(str)
-            liststore.append(['Enabled'])
-            liststore.append(['Disabled'])
-            selector = hildon.TouchSelector()
-            selector.append_text_column(liststore, True)
-            selector.connect('changed', getPwdEnabled)
-            selector.set_active(0, -1)
-            dialog = hildon.PickerDialog(windowSettings)
-            dialog.set_selector(selector)
-            dialog.set_title('Password protection')
-            dialog.run()
+            def getNewPragmaKey(self):
+                global newKey
+                newKey = self.get_text()
+                self.set_text('')
+
+            def elements():
+                table = gtk.Table(2, 1, True)
+                entryCurrentPragmaKey = hildon.Entry(gtk.HILDON_SIZE_AUTO)
+                entryCurrentPragmaKey.set_input_mode(gtk.HILDON_GTK_INPUT_MODE_FULL)
+                entryCurrentPragmaKey.set_visibility(False)
+                entryCurrentPragmaKey.set_placeholder('Type current key')
+                entryCurrentPragmaKey.connect('activate', getCurrentPragmaKey)
+                entryNewPragmaKey = hildon.Entry(gtk.HILDON_SIZE_AUTO)
+                entryNewPragmaKey.set_input_mode(gtk.HILDON_GTK_INPUT_MODE_FULL)
+                entryNewPragmaKey.set_visibility(False)
+                entryNewPragmaKey.set_placeholder('Type new key')
+                entryNewPragmaKey.connect('activate', getNewPragmaKey)
+                table.attach(entryCurrentPragmaKey, 0, 1, 0, 1)
+                table.attach(entryNewPragmaKey, 0, 1, 1, 2)
+                return table
+
+            pannableArea = hildon.PannableArea()
+            pannableArea.add_with_viewport(elements())
+            dialog = gtk.Dialog('Change Pragma Key', windowSettings,
+                    gtk.DIALOG_NO_SEPARATOR | gtk.DIALOG_DESTROY_WITH_PARENT)
+            dialog.set_size_request(0, 200)
+            dialog.vbox.add(pannableArea)
+            dialog.add_button('Done', gtk.RESPONSE_OK)
+            dialog.show_all()
+            response = dialog.run()
+            if response == gtk.RESPONSE_OK:
+                cur.execute('PRAGMA key="'+currentKey+'";')
+                cur.execute('PRAGMA rekey="'+newKey+'";')
+                iface.SystemNoteInfoprint('Restarting!')
+                gtk.main_quit()
+                os.execl(sys.executable, sys.executable, * sys.argv)
             dialog.destroy()
 
         def saveSettings(self, data=None):
             if len(settings[0]) == 1 and len(settings[1]) == 1 \
-                    and len(settings[2]) == 1 and len(settings[3]) == 1:
+                    and len(settings[2]) == 1:
                 windowSettings.connect('destroy', gtk.main_quit)
             settings[0] = currencyNew+'\n'
             settings[1] = defaultViewNew+'\n'
             settings[2] = savingCategory+'\n'
-            settings[3] = pwdEnabledNew+'\n'
             with open('/home/user/.maemoneypot/settings.ini', 'w') \
                     as settingsfile:
                 settingsfile.writelines(settings)
@@ -468,20 +519,18 @@ class MainWindow(hildon.StackableWindow):
         buttonDefaultView.connect('clicked', setDefaultView)
         table.attach(buttonDefaultView, 0, 1, 2, 3)
         entrySaving = hildon.Entry(gtk.HILDON_SIZE_AUTO)
-        entrySaving.set_placeholder('Set savings category; \
-                                    current is: '+savingCategory)
+        entrySaving.set_placeholder('Set savings category; current is: '+savingCategory)
         entrySaving.connect('activate', getSaving)
         table.attach(entrySaving, 0, 1, 3, 4)
-        buttonPwdEnabled = \
+        buttonChangePragmaKey = \
             hildon.PickerButton(gtk.HILDON_SIZE_AUTO_WIDTH |
                                 gtk.HILDON_SIZE_AUTO_HEIGHT,
                                 hildon.BUTTON_ARRANGEMENT_VERTICAL)
-        buttonPwdEnabled.set_title('Password protection')
-        buttonPwdEnabled.set_value(pwdEnabledNew)
-        buttonPwdEnabled.set_style(hildon.BUTTON_STYLE_NORMAL)
-        buttonPwdEnabled.set_relief(gtk.RELIEF_NONE)
-        buttonPwdEnabled.connect('clicked', setPwdEnabled)
-        table.attach(buttonPwdEnabled, 0, 1, 4, 5)
+        buttonChangePragmaKey.set_title('Change pragma key')
+        buttonChangePragmaKey.set_style(hildon.BUTTON_STYLE_NORMAL)
+        buttonChangePragmaKey.set_relief(gtk.RELIEF_NONE)
+        buttonChangePragmaKey.connect('clicked', changePragmaKey)
+        table.attach(buttonChangePragmaKey, 0, 1, 4, 5)
         buttonSave = hildon.Button(gtk.HILDON_SIZE_AUTO_WIDTH |
                                    gtk.HILDON_SIZE_AUTO_HEIGHT,
                                    hildon.BUTTON_ARRANGEMENT_VERTICAL)
@@ -493,47 +542,9 @@ class MainWindow(hildon.StackableWindow):
 
         windowSettings.add(table)
         if len(settings[0]) == 1 and len(settings[1]) == 1 \
-                and len(settings[2]) == 1 and len(settings[3]) == 1:
+                and len(settings[2]) == 1:
             windowSettings.connect('destroy', gtk.main_quit)
         windowSettings.show_all()
-
-    def password(self):
-        def getPass(self):
-            try:
-                with open('/home/user/.maemoneypot/password', 'r') as passfile:
-                    _pass = passfile.readline()
-                    if hashlib.sha224(self.get_text()).hexdigest() == _pass:
-                        window.destroy()
-                        iface.SystemNoteInfoprint('Password accepted')
-                        if defaultView == 'Main':
-                            MainWindow().mainView(time.strftime('%Y'),
-                                                  time.strftime('%m'), None)
-                        elif defaultView == 'Calendar':
-                            MainWindow().calendarView(time.strftime('%Y'), time.strftime('%m'))
-                        hildon.Program.get_instance()
-                        gtk.main()
-                    else:
-                        iface.SystemNoteInfoprint('Incorrect password, sorry...')
-                        gtk.main_quit()
-            except:
-                with open('/home/user/.maemoneypot/password', 'w') as passfile:
-                    passfile.write(hashlib.sha224(self.get_text()).hexdigest())
-                    iface.SystemNoteInfoprint('Password saved')
-                    gtk.main_quit()
-                os.execl(sys.executable, sys.executable, * sys.argv)
-
-        window = hildon.StackableWindow()
-        window.set_title('Authentication')
-        table = gtk.Table(1, 1, True)
-        entryPass = hildon.Entry(gtk.HILDON_SIZE_AUTO)
-        # entryPass.set_placeholder('Type the password')
-        entryPass.set_input_mode(gtk.HILDON_GTK_INPUT_MODE_FULL)
-        entryPass.set_visibility(False)
-        entryPass.connect('activate', getPass)
-        table.attach(entryPass, 0, 1, 0, 1)
-        window.add(table)
-        window.connect('destroy', gtk.main_quit)
-        window.show_all()
 
     def search(self, widget):
         cur.execute('select * from Expenses;')
@@ -1048,7 +1059,7 @@ class MainWindow(hildon.StackableWindow):
         Expense = list1[0]
         Income = list2[0]
         Saving = list3[0]
-        query = DatabaseQueries(year, month, day, currency)
+        query = DatabaseQueries(year, month, day, currency, key)
         if day is not None:
             expenses_query = query.dayExpensesQuery()
             incomes_query = query.dayIncomesQuery()
@@ -1307,16 +1318,15 @@ class MainWindow(hildon.StackableWindow):
                             strftime("%m", Date)="'+Month+'" and \
                             strftime("%d", Date)="'+day+'" and \
                             Category="'+category+'" order by Tag;')
-                window.set_title(category+' | '+day+' | \
-                                 '+MonthNameList[Month]+' | '+Year)
+                window.set_title(category+' | '+day+' | '+ \
+                                 MonthNameList[Month]+' | '+Year)
             else:
                 cur.execute('select Id, strftime("%d", Date), Expense, Tag \
                             from Expenses where \
                             strftime("%Y", Date)="'+Year+'" and \
                             strftime("%m", Date)="'+Month+'" and \
                             Category="'+category+'" order by Tag;')
-                window.set_title(category+' | '+MonthNameList[Month]+' \
-                                 | '+Year)
+                window.set_title(category+' | '+MonthNameList[Month]+' | '+Year)
             row = cur.fetchall()
             return row
 
@@ -1327,16 +1337,15 @@ class MainWindow(hildon.StackableWindow):
                             strftime("%m", Date)="'+Month+'" and \
                             strftime("%d", Date)="'+day+'" and \
                             Category="'+category+'" order by Expense;')
-                window.set_title(category+' | '+day+' | \
-                                 '+MonthNameList[Month]+' | '+Year)
+                window.set_title(category+' | '+day+' | '+ \
+                                 MonthNameList[Month]+' | '+Year)
             else:
                 cur.execute('select Id, strftime("%d", Date), Expense, Tag \
                             from Expenses where \
                             strftime("%Y", Date)="'+Year+'" and \
                             strftime("%m", Date)="'+Month+'" and \
                             Category="'+category+'" order by Expense;')
-                window.set_title(category+' | '+MonthNameList[Month]+' | \
-                                 '+Year)
+                window.set_title(category+' | '+MonthNameList[Month]+' | '+Year)
             row = cur.fetchall()
             return row
 
@@ -1515,10 +1524,22 @@ class MainWindow(hildon.StackableWindow):
                 db.commit()
                 pannableArea.remove(pannableArea.get_child())
                 if sumDetailsExpense-expense == 0:
-                    label.set_text("<span size='24000'>No Expense</span>")
+                    label_sumexpense.set_text("<span size='24000'>No Expense</span>")
+                    label_sumexpense.set_use_markup(True)
+                    label_sumexpense.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#a0785a'))
+                    table.remove(graphDetails)
+                    tableDetails.remove(buttonTagOrder)
+                    tableDetails.remove(buttonExpenseOrder)
+                    if day is None:
+                        tableDetails.remove(buttonDayOrder)
                 else:
-                    label.set_text("<span size='24000'> \
-                                   "+str(sumDetailsExpense-expense)+" "+currency+"</span>")
+                    label_sumexpense.set_text("<span size='24000'>"+str(sumDetailsExpense-expense)+" "+currency+"</span>")
+                    label_sumexpense.set_use_markup(True)
+                    label_sumexpense.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#a0785a'))
+                    table.remove(graphDetails)
+                    graphDetails_new = matplotlibQuery.ExpensesByTags(str(sumDetailsExpense-expense)+" "+currency, Year, Month, day, category)
+                    table.attach(graphDetails_new, 1, 2, 0, 1)
+                    table.show_all()
                     if order == 'tag':
                         pannableArea.add_with_viewport(details
                                                        (tagOrderQuery(),
@@ -1649,10 +1670,10 @@ class MainWindow(hildon.StackableWindow):
             buttonDayOrder.connect('toggled', toggleDayOrder)
             tableDetails.attach(buttonDayOrder, 2, 3, 7, 8)
 
-        label = gtk.Label()
-        label.set_text("<span size='24000'>"+sumExpense+"</span>")
-        label.set_use_markup(True)
-        label.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#a0785a'))
+        label_sumexpense = gtk.Label()
+        label_sumexpense.set_text("<span size='24000'>"+sumExpense+"</span>")
+        label_sumexpense.set_use_markup(True)
+        label_sumexpense.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#a0785a'))
         pannableArea = hildon.PannableArea()
         pannableArea.add_with_viewport(details(tagOrderQuery(), 'tag'))
         # buttonTagOrder = hildon.Button(gtk.HILDON_SIZE_AUTO_WIDTH |
@@ -1674,10 +1695,10 @@ class MainWindow(hildon.StackableWindow):
                                                       Month, day, category)
 
         if day is not None:
-            tableDetails.attach(label, 0, 2, 0, 1)
+            tableDetails.attach(label_sumexpense, 0, 2, 0, 1)
             tableDetails.attach(pannableArea, 0, 2, 1, 7)
         else:
-            tableDetails.attach(label, 0, 3, 0, 1)
+            tableDetails.attach(label_sumexpense, 0, 3, 0, 1)
             tableDetails.attach(pannableArea, 0, 3, 1, 7)
         tableDetails.attach(buttonTagOrder, 0, 1, 7, 8)
         tableDetails.attach(buttonExpenseOrder, 1, 2, 7, 8)
@@ -1777,7 +1798,8 @@ class MainWindow(hildon.StackableWindow):
                 if category == settings[2][0:len(settings[2])-1]:
                     cur.execute('insert into Savings(Date, Saving, \
                                                      Category) \
-                                values("'+str(date)+'", "'+str(expense)+'", \
+                                values("'+str(date)+'", \
+                                "'+str(expense)+'", \
                                 "'+str(tag)+'");')
                     db.commit()
 
@@ -1903,7 +1925,8 @@ class MainWindow(hildon.StackableWindow):
                 gtk.Dialog.hide(note)
             else:
                 cur.execute('insert into Incomes(Date, Income, Category) \
-                            values("'+str(date)+'", "'+str(income)+'", \
+                            values("'+str(date)+'", \
+                            "'+str(income)+'", \
                             "'+str(category)+'");')
                 db.commit()
                 bus = dbus.SystemBus()
@@ -2020,12 +2043,14 @@ class MainWindow(hildon.StackableWindow):
                 gtk.Dialog.hide(note)
             else:
                 cur.execute('insert into Savings(Date, Saving, Category) \
-                            values("'+str(date)+'", "'+str(saving)+'", \
+                            values("'+str(date)+'", \
+                            "'+str(saving)+'", \
                             "'+str(category)+'");')
                 db.commit()
                 cur.execute('insert into Expenses(Date, Expense, \
                                                   Category, Tag) \
-                            values("'+str(date)+'", "'+str(saving)+'", \
+                            values("'+str(date)+'", \
+                            "'+str(saving)+'", \
                             "Saving", "'+str(category)+'");')
                 db.commit()
                 bus = dbus.SystemBus()
@@ -2115,16 +2140,9 @@ class MainWindow(hildon.StackableWindow):
 
 if __name__ == '__main__':
     if len(settings[0]) == 1 and len(settings[1]) == 1 and \
-            len(settings[2]) == 1 and len(settings[3]) == 1:
+            len(settings[2]) == 1:
         MainWindow().settings()
     else:
-        if pwdEnabled == 'Enabled':
-            MainWindow().password()
-        else:
-            if defaultView == 'Main':
-                MainWindow().mainView(time.strftime('%Y'),
-                                      time.strftime('%m'), None)
-            elif defaultView == 'Calendar':
-                MainWindow().calendarView(time.strftime('%Y'), time.strftime('%m'))
+        pragmaKey()
     hildon.Program.get_instance()
     gtk.main()
