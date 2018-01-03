@@ -1,7 +1,7 @@
 # MaeMoneyPot
 An expense, income and saving tracker for Nokia N900 with some extended functions such as different views, graphs.
 
-# ToDo
+### ToDo
 - Apply details view for incomes and savings
 - Connect savings and expense more
 - Add export-import-backup functionality
@@ -13,7 +13,7 @@ An expense, income and saving tracker for Nokia N900 with some extended function
 - Make recurring expense/income/saving option available
 - Automatic rollover between months
 
-# Description
+### Description
 
 The application does not depend on matplotlib and numpy directly. If you do not have those installed you just simply cannot see the graphs. 
 Important: there is no automatic rollover so if you have some money at the end of the month you have to enter that manually for next month's income (maybe I should add rollover function too).
@@ -56,7 +56,7 @@ I hope the names are speaking for themselves… (: But here are some details:
 - In settings window you can set currency, default view and an expense which if you add to expenses then it will be automatically set as a saving as well (so you do not have to add that amount to savings). 
 - You can search for everything and anything in all three databases – no whole words required and capital letter doesn’t matter. Incomes and savings entries can be modified or deleted only this way (for now). Important! If you modify or delete a saving entry, the “connected” expense entry remains the same as before (no automatic modification or deletion done) so you have to manually modify that expense entry as well (and vice versa: if you modify an expense which is technically a saving entry, the saving entry remains…).
 
-# Known bugs
+### Known bugs
 
 - Date selection with hildon.DateButton results segmentation fault when no date selected – i.e. the user taps outside the date selection dialog. This does not happen in the search window though… 
 - Sometimes warnings are raised – maybe in connection to rotation and matplotlib. E.g.: weakref.py:232 – assertion G_IS_OBJECT failed. 
