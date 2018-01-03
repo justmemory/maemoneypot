@@ -1,6 +1,9 @@
 # MaeMoneyPot
 An expense, income and saving tracker for Nokia N900 with some extended functions such as different views, graphs.
+
 ![alt text](https://talk.maemo.org/attachment.php?attachmentid=39008&stc=1&d=1485814446)
+![alt text](https://talk.maemo.org/attachment.php?attachmentid=39009&stc=1&d=1485814481)
+![alt text](https://talk.maemo.org/attachment.php?attachmentid=39010&stc=1&d=1485814525)
 ### ToDo
 - Apply details view for incomes and savings
 - Connect savings and expense more
