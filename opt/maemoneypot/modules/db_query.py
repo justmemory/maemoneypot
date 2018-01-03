@@ -1,4 +1,4 @@
-import sqlite3 as sql
+from pysqlcipher import dbapi2 as sql
 
 database = '/home/user/.maemoneypot/.maemoneypotdb'
 
@@ -8,16 +8,18 @@ cur = db.cursor()
 
 class DatabaseQueries(object):
 
-    version = '0.1'
+    version = '0.2'
 
-    def __init__(self, year, month, day, currency):
+    def __init__(self, year, month, day, currency, key):
         self.year = year
         self.month = month
         self.day = day
         self.currency = currency
+        self.key = key
 
     def mainExpensesQuery(self):
         list1, list2, list3 = [], [], []
+        cur.execute('PRAGMA key="'+self.key+'";')
         cur.execute('select distinct Category, sum(Expense) \
                     from Expenses where \
                     strftime("%Y", Date)="'+self.year+'" \
@@ -67,6 +69,7 @@ class DatabaseQueries(object):
 
     def mainIncomesQuery(self):
         list1, list2, list3 = [], [], []
+        cur.execute('PRAGMA key="'+self.key+'";')
         cur.execute('select distinct Category, sum(Income) \
                     from Incomes where \
                     strftime("%Y", Date)="'+self.year+'" \
@@ -106,6 +109,7 @@ class DatabaseQueries(object):
 
     def mainSavingsQuery(self):
         list1, list2, list3 = [], [], []
+        cur.execute('PRAGMA key="'+self.key+'";')
         cur.execute('select distinct Category, sum(Saving) \
                     from Savings where \
                     strftime("%Y", Date)="'+self.year+'" \
@@ -145,6 +149,7 @@ class DatabaseQueries(object):
 
     def dayExpensesQuery(self):
         list1, list2, list3 = [], [], []
+        cur.execute('PRAGMA key="'+self.key+'";')
         cur.execute('select distinct Category, sum(Expense) \
                     from Expenses where \
                     strftime("%Y", Date)="'+self.year+'" \
@@ -174,6 +179,7 @@ class DatabaseQueries(object):
 
     def dayIncomesQuery(self):
         list1, list2, list3 = [], [], []
+        cur.execute('PRAGMA key="'+self.key+'";')
         cur.execute('select distinct Category, sum(Income) \
                     from Incomes where \
                     strftime("%Y", Date)="'+self.year+'" \
@@ -191,6 +197,7 @@ class DatabaseQueries(object):
 
     def daySavingsQuery(self):
         list1, list2, list3 = [], [], []
+        cur.execute('PRAGMA key="'+self.key+'";')
         cur.execute('select distinct Category, sum(Saving) \
                     from Savings where \
                     strftime("%Y", Date)="'+self.year+'" \

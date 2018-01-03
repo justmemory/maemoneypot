@@ -2,7 +2,7 @@
 import gtk
 import imp
 import dbus
-import sqlite3 as sql
+from pysqlcipher import dbapi2 as sql
 
 '''This is fixed to exclude 'dummy user' actions
 as the database content is definite'''
@@ -43,10 +43,11 @@ except ImportError:
 
 class MatplotlibQueries(object):
 
-    version = '0.1'
+    version = '0.2'
 
-    def __init__(self, currency):
+    def __init__(self, currency, key):
         self.currency = currency
+        self.key = key
 
     def Speedclock(self, expense, income):
         if modules is False:
@@ -133,6 +134,7 @@ class MatplotlibQueries(object):
             label.modify_fg(gtk.STATE_NORMAL, gtk.gdk.color_parse('#a0785a'))
             return label
         else:
+            cur.execute('PRAGMA key="'+self.key+'";')
             cur.execute('select count(distinct strftime("%m", Date)) \
                         from Expenses where \
                         strftime("%Y", Date) = "'+year+'";')
@@ -221,6 +223,7 @@ class MatplotlibQueries(object):
         else:
             sumExpense = (sumExpense.strip().split(' '))[0]
             if sumExpense > 0:
+                cur.execute('PRAGMA key="'+self.key+'";')
                 if day is not None:
                     cur.execute('select distinct Tag, sum(Expense) \
                                 from Expenses where \
@@ -261,7 +264,7 @@ class MatplotlibQueries(object):
                 plt.axis('off')
                 plt.xlim(-0.05, 0.9)
                 plt.ylim(-0.1, 0.4)
-                leg = plt.legend(Legend, frameon=False, prop={'size': 16},
+                leg = plt.legend(Legend, frameon=False, prop={'size': 12},
                                  borderpad=0.3, labelspacing=0.6,
                                  loc='upper left', bbox_to_anchor=(0.54, 1.1))
                 for i in leg.get_texts():
