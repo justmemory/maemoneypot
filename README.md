@@ -22,7 +22,7 @@ There are two views available:
 - Main view
 - Calendar view
 
-Main view: 
+**Main view:** 
 You can see all expenses, incomes for the current month, and all Savings that you added so far to the database (not just for current month). You can tap all of them. 
 There is a “speedclock” that shows all expense as percentage of all income. 
 There is a trend line that shows all expense and all income for the months of the current year. 
@@ -40,7 +40,7 @@ For incomes and savings there are no such options (yet) because for incomes and 
 If you want to add an entry you have to tap on the button next to the all expenses label. The date is automatically set to current date. For amount of money you can enter only numbers (do not have to use blue arrow key with keyboard!). You can specify categories in the entry box or if there is any in the database then you select it from the list if you click on the category button. For expenses there is a tag entry and button. If you selected a category then all tags for that category are shown when you click on the tag button. But you can specify new ones in the entry as well. Be aware the latest information will be written to the database (e.g.: you selected a category but want to modify that you can simply choose another one or specify a new one in the entry). In the entry box you always have to press “enter” to store the information. 
 If everything is set you can click on “save”. If something is missing there will be a warning and no entry will be written to the database. If all data is set then clicking on save button will save that entry to the database and a short message will be shown about that. Important! If you add something to savings then it will be set into expenses as “Saving” category! Be aware that all the latest information are stored so if you click on save button again then it will write those information to the database again. For me the advantage of this is that iIf you would like you can set another entry by changing only category or amount or tag or date. This eases setting more entries with the similar category for example as you have to modify only tag and amount of money. If you do not want to set more entry you only have to press on back arrow. Then you will be taken to the main view and all the data will be refreshed. 
 
-Calendar view:
+**Calendar view:**
 There is a calendar for the particular month. In the calendar you can see expenses, incomes and savings for that day. If you tap on a day then you can see the summarized information for that day – from here all the functions are the same as written in main view. The advantage of calendar view is that if you want to see a particular day or want to add an entry for that day you can do that. In the adding window date is automatically set to that date and all the details are shown for that day if you go to the details window. 
 
 There are menu buttons both in calendar view and main view: 
