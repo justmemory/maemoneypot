@@ -1,1 +1,11 @@
-
+[Desktop Entry]
+Version=1.0.0
+Encoding=UTF-8
+Name=MaeMoneyPot
+Comment=Expense, income and saving tracker
+Exec=/opt/maemoneypot/maemoneypot.py
+Icon=maemoneypot
+X-Icon-path=/usr/share/icons
+X-Window-Icon=maemoneypot
+Type=Application
+X-Osso-Type=application/x-executable
